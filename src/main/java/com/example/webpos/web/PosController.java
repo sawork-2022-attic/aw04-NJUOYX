@@ -14,13 +14,22 @@ import javax.servlet.http.HttpSession;
 @Controller
 public class PosController {
 
+    private HttpSession session;
+
     private PosService posService;
 
-    private Cart cart;
+    private Cart getCart() {
+        Cart cart = (Cart) session.getAttribute("cart");
+        if(cart == null){
+            cart = new Cart();
+            session.setAttribute("cart", cart);
+        }
+        return cart;
+    }
 
     @Autowired
-    public void setCart(Cart cart) {
-        this.cart = cart;
+    public void setSession(HttpSession session){
+        this.session = session;
     }
 
     @Autowired
@@ -31,15 +40,16 @@ public class PosController {
     @GetMapping("/")
     public String pos(Model model) {
         model.addAttribute("products", posService.products());
-        model.addAttribute("cart", cart);
+        model.addAttribute("cart", getCart());
         return "index";
     }
 
     @GetMapping("/add")
     public String addByGet(@RequestParam(name = "pid") String pid, Model model) {
-        posService.add(cart, pid, 1);
+        Cart cart = posService.add(getCart(), pid, 1);
+        session.setAttribute("cart", cart);
         model.addAttribute("products", posService.products());
-        model.addAttribute("cart", cart);
+        model.addAttribute("cart", getCart());
         return "index";
     }
 }
